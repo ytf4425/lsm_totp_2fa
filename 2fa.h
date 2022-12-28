@@ -8,12 +8,14 @@
 
 struct file_node {
     struct hlist_node node;
+    int hash_value;
     char* path;
     char* code;
     int uid;
     int state;
 };
 
+int hash_calc(char* str);
 int unlock(struct file_node* file_info, char* key);
 int lock(struct file_node* file_info);
 int totp(char* key);

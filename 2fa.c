@@ -2,19 +2,45 @@
 #include "otp/base32.h"
 #include "otp/rfc6238.h"
 #include "utils.h"
-#include <linux/vmalloc.h>
 #include <linux/ktime.h>
 #include <linux/time64.h>
 #include <linux/timekeeping.h>
+#include <linux/vmalloc.h>
 
-void init_2fa(void)
+struct hlist_head htable[16];
+
+void init_hashtable(void)
 {
+    hash_init(htable);
+}
+
+struct file_node* get_file_info(char* path, int uid)
+{
+    int hash_value = hash_calc(path);
+    struct file_node* file_entry;
+    hash_for_each_possible(htable, file_entry, node, hash_value) {
+        if (file_entry->hash_value == hash_value) {
+            if (strcmp(file_entry->path, path) == 0 && file_entry->uid == uid) {
+                return file_entry;
+            }
+        }
+    }
+    return NULL;
+}
+
+int hash_calc(char* str)
+{
+    int i, ret;
+    for (i = 0, ret = 0; str[i] != 0; i++) {
+        ret += str[i];
+    }
+    return ret;
 }
 
 char* get_new_2fa_code(void)
 {
     time64_t timenow = ktime_get_real_seconds();
-    char* ret = (char*)vmalloc(sizeof(char)*11);    // timestamp need 10 chars
+    char* ret = (char*)vmalloc(sizeof(char) * 11); // timestamp need 10 chars
     itoa(timenow, ret, 10);
     return ret;
 }
