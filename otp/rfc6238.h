@@ -34,7 +34,7 @@
  * *************************/
 
 
-u32 TOTP(u8 *key, size_t kl, u64 time);
+uint32_t TOTP(uint8_t *key, size_t kl, uint64_t time);
 time64_t get_time(time64_t T0);
 
 #endif

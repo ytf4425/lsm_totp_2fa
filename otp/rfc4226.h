@@ -18,10 +18,10 @@
 #include <linux/types.h>
 
 //MAIN HOTP function
-u32 HOTP(u8 *key, size_t kl, u64 interval);
+uint32_t HOTP(uint8_t *key, size_t kl, uint64_t interval);
 //First step
-u8 *hmac(unsigned char *key, int kl, u64 interval);
+uint8_t *hmac(unsigned char *key, int kl, uint64_t interval);
 //Second step
-u32 DT(u8 *digest);
+uint32_t DT(uint8_t *digest);
 
 #endif

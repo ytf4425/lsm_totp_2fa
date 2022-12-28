@@ -1,7 +1,9 @@
-char* itoa(int num, char* str, int radix)
+#include "utils.h"
+
+char* itoa(int64_t num, char* str, int radix)
 {
     char index[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 索引表
-    unsigned unum; // 存放要转换的整数的绝对值,转换的整数可能是负数
+    uint64_t unum; // 存放要转换的整数的绝对值,转换的整数可能是负数
     int i = 0, j, k; // i用来指示设置字符串相应位，转换之后i其实就是字符串的长度；转换后顺序是逆序的，有正负的情况，k用来指示调整顺序的开始位置;j用来指示调整顺序时的交换。
 
     // 获取要转换的整数的绝对值

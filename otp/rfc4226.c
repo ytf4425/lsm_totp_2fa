@@ -18,7 +18,7 @@
 #include <linux/types.h>
 #include <linux/vmalloc.h>
 
-u8* hmac(unsigned char* key, int kl, u64 interval)
+uint8_t* hmac(unsigned char* key, int kl, uint64_t interval)
 {
     struct sdesc {
         struct shash_desc shash;
@@ -26,8 +26,8 @@ u8* hmac(unsigned char* key, int kl, u64 interval)
     }* sdesc;
     int size;
     struct crypto_shash* hmac_info;
-    u8* result;
-    result = (u8*)vmalloc(sizeof(u8) * 20); // 20 bytes SHA-1
+    uint8_t* result;
+    result = (uint8_t*)vmalloc(sizeof(uint8_t) * 20); // 20 bytes SHA-1
 
     hmac_info = crypto_alloc_shash("hmac(sha1)", 0, 0);
     if (IS_ERR(hmac_info)) {
@@ -46,18 +46,18 @@ u8* hmac(unsigned char* key, int kl, u64 interval)
         return NULL;
     }
 
-    crypto_shash_digest(&sdesc->shash, (u8*)&interval, 8, result);
+    crypto_shash_digest(&sdesc->shash, (uint8_t*)&interval, 8, result);
     
     vfree(sdesc);
     crypto_free_shash(hmac_info);
     return result;
 }
 
-u32 DT(u8* digest)
+uint32_t DT(uint8_t* digest)
 {
 
-    u64 offset;
-    u32 bin_code;
+    uint64_t offset;
+    uint32_t bin_code;
 
 #ifdef DEBUG
 
@@ -85,20 +85,20 @@ u32 DT(u8* digest)
     return bin_code;
 }
 
-u32 mod_hotp(u32 bin_code)
+uint32_t mod_hotp(uint32_t bin_code)
 {
-    u32 otp = bin_code % 1000000;
+    uint32_t otp = bin_code % 1000000;
 
     return otp;
 }
 
-u32 HOTP(u8* key, size_t kl, u64 interval)
+uint32_t HOTP(uint8_t* key, size_t kl, uint64_t interval)
 {
 
-    u8* digest;
-    u32 result;
-    u32 endianness;
-    u32 dbc;
+    uint8_t* digest;
+    uint32_t result;
+    uint32_t endianness;
+    uint32_t dbc;
 #ifdef DEBUG
     printf("KEY IS: %s\n", key);
     printf("KEY LEN IS: %d\n", kl);
@@ -106,15 +106,15 @@ u32 HOTP(u8* key, size_t kl, u64 interval)
 #endif
 
     endianness = 0xdeadbeef;
-    if ((*(const u8*)&endianness) == 0xef) {
+    if ((*(const uint8_t*)&endianness) == 0xef) {
         interval = ((interval & 0x00000000ffffffff) << 32) | ((interval & 0xffffffff00000000) >> 32);
         interval = ((interval & 0x0000ffff0000ffff) << 16) | ((interval & 0xffff0000ffff0000) >> 16);
         interval = ((interval & 0x00ff00ff00ff00ff) << 8) | ((interval & 0xff00ff00ff00ff00) >> 8);
     };
 
     // First Phase, get the digest of the message using the provided key ...
-    digest = (u8*)hmac(key, kl, interval);
-    // digest = (u8 *)HMAC(EVP_sha1(), key, kl, (const unsigned char *)&interval, sizeof(interval), NULL, 0);
+    digest = (uint8_t*)hmac(key, kl, interval);
+    // digest = (uint8_t *)HMAC(EVP_sha1(), key, kl, (const unsigned char *)&interval, sizeof(interval), NULL, 0);
     // Second Phase, get the dbc from the algorithm
     dbc = DT(digest);
     // Third Phase: calculate the mod_k of the dbc to get the correct number

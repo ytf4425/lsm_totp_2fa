@@ -30,7 +30,7 @@ check_input(const unsigned char* user_data, size_t data_len, int max_len)
     return 0;
 }
 
-static const s8 base32_vals[256] = {
+static const int8_t base32_vals[256] = {
     //    This map cheats and interprets:
     //       - the numeral zero as the letter "O" as in oscar
     //       - the numeral one as the letter "L" as in lima
@@ -136,8 +136,8 @@ base32_encode(const unsigned char *user_data, size_t data_len)
         return NULL;
     }
 
-    u64 first_octet, second_octet, third_octet, fourth_octet, fifth_octet;
-    u64 quintuple;
+    uint64_t first_octet, second_octet, third_octet, fourth_octet, fifth_octet;
+    uint64_t quintuple;
     int j;
     for (i = 0, j = 0; i < user_data_chars;) {
         first_octet = i < user_data_chars ? user_data[i++] : 0;
@@ -174,7 +174,7 @@ base32_encode(const unsigned char *user_data, size_t data_len)
 }
 
 size_t
-decode_b32key(u8 **k, size_t len)
+decode_b32key(uint8_t **k, size_t len)
 {
 
     size_t keylen;

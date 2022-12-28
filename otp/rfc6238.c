@@ -21,10 +21,10 @@ get_time(time64_t t0)
     return (ktime_get_real_seconds() - t0) / TSTEP;
 }
 
-u32
-TOTP(u8 *key, size_t kl, u64 time)
+uint32_t
+TOTP(uint8_t *key, size_t kl, uint64_t time)
 {
-    u32 totp;
+    uint32_t totp;
 
     totp = HOTP(key, kl, time);
     return totp;

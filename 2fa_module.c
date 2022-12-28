@@ -22,9 +22,6 @@ static char* sbuff = NULL;
 static struct proc_dir_entry *dir, *fpath, *fkey, *fstate;
 static char *path = NULL, *key = NULL;
 
-static int unlock(void);
-static int lock(void);
-static int totp(char* key);
 static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t count, loff_t* f_pos);
 static ssize_t proc_write_state(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos);
 static ssize_t proc_read_path(struct file* file, char __user* buffer, size_t count, loff_t* f_pos);
@@ -143,6 +140,7 @@ static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t co
     int a=totp(key);
     pr_info("%d\n",a);
     char * stra = (char*)vmalloc(100);
+    get_new_2fa_code();
     itoa(a,stra,10);
     count = strlen(stra);
     if (*f_pos >= count) {
@@ -159,6 +157,7 @@ static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t co
 static ssize_t proc_write_state(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos)
 {
     int new_state;
+    struct file_node file_info;
 
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
 
@@ -169,55 +168,15 @@ static ssize_t proc_write_state(struct file* file, const char __user* buffer, si
 
     sscanf(sbuff, "%d", &new_state);
     if (new_state == 1)
-        lock();
+        lock(&file_info);
     else if (new_state == 0) {
-        if (unlock())
+        if (unlock(&file_info,key))
             return -EFAULT;
     } else {
         printk(KERN_INFO "[proc_2fa]: /proc/2fa/state got unavaliable input.\n");
         return -EFAULT;
     }
     return count;
-}
-
-static int lock(void)
-{
-    // TODO: lock
-    printk(KERN_INFO "[proc_2fa]: %s locked.\n", path);
-    return 0;
-}
-
-static int unlock(void)
-{
-    // TODO: check
-    if (1) {
-        // TODO: unlock
-        printk(KERN_INFO "[proc_2fa]: %s unlocked.\n", path);
-    } else {
-        printk(KERN_INFO "[proc_2fa]: %s failed to be unlocked.\n", path);
-        return -EFAULT;
-    }
-    return 0;
-}
-
-static int totp(char* key)
-{
-    size_t len;
-    size_t keylen;
-    u8* k;
-    u32 result;
-    time64_t t;
-
-    len = strlen(key);
-    if (validate_b32key(key, len) == 1) {
-        printk(KERN_INFO "%s: invalid base32 secret\n", key);
-        return -1;
-    }
-    k = (u8*)key;
-    keylen = decode_b32key(&k, len);
-    t = get_time(TSTART);
-    result = TOTP(k, keylen, t);
-    return result;
 }
 
 module_init(proc_2fa_init);
