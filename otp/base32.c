@@ -11,11 +11,26 @@
  *  e.g EVP_md5(), EVP_sha224, EVP_sha512, etc
  *
  */
-#include <linux/module.h> /* Specifically, a module */
+#include <linux/vmalloc.h>
 #include "base32.h"
 
+static int
+check_input(const unsigned char* user_data, size_t data_len, int max_len)
+{
+    if (user_data == NULL || (data_len == 0 && user_data[0] != '\0')) {
+        return -1;
+    } else if (user_data[0] == '\0') {
+        return -1;
+    }
 
-static const int8_t base32_vals[256] = {
+    if (data_len > max_len) {
+        return -1;
+    }
+
+    return 0;
+}
+
+static const s8 base32_vals[256] = {
     //    This map cheats and interprets:
     //       - the numeral zero as the letter "O" as in oscar
     //       - the numeral one as the letter "L" as in lima
@@ -48,7 +63,7 @@ validate_b32key(char *k, size_t len)
     if (((len & 0xF) != 0) && ((len & 0xF) != 8))
         return 1;
     for (pos = 0; (pos < len); pos++) {
-        if (base32_vals[k[pos]] == -1)
+        if (base32_vals[(int)k[pos]] == -1)
             return 1;
         if (k[pos] == '=') {
             if (((pos & 0xF) == 0) || ((pos & 0xF) == 8))
@@ -73,6 +88,90 @@ validate_b32key(char *k, size_t len)
     return 0;
 }
 
+// The encoding process represents 40-bit groups of input bits as output strings of 8 encoded characters. The input data must be null terminated.
+char *
+base32_encode(const unsigned char *user_data, size_t data_len)
+{
+    static const unsigned char b32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    int error;
+    error = check_input(user_data, data_len, MAX_ENCODE_INPUT_LEN);
+    if (error != 0) {
+        return NULL;
+    }
+
+    size_t user_data_chars = 0, total_bits = 0;
+    int num_of_equals = 0;
+    int i;
+    for (i = 0; i < data_len; i++) {
+        // As it's not known whether data_len is with or without the +1 for the null byte, a manual check is required.
+        // Check for null byte only at the end of the user given length, otherwise issue#23 may occur
+        if (user_data[i] == '\0' && i == data_len-1) {
+            break;
+        } else {
+            total_bits += 8;
+            user_data_chars += 1;
+        }
+    }
+    switch (total_bits % 40) {
+        case 8:
+            num_of_equals = 6;
+            break;
+        case 16:
+            num_of_equals = 4;
+            break;
+        case 24:
+            num_of_equals = 3;
+            break;
+        case 32:
+            num_of_equals = 1;
+            break;
+        default:
+            break;
+    }
+
+    size_t output_length = (user_data_chars * 8 + 4) / 5;
+    char *encoded_data = vmalloc(output_length + num_of_equals + 1);
+    memset(encoded_data,0,output_length + num_of_equals + 1);
+    if (encoded_data == NULL) {
+        return NULL;
+    }
+
+    u64 first_octet, second_octet, third_octet, fourth_octet, fifth_octet;
+    u64 quintuple;
+    int j;
+    for (i = 0, j = 0; i < user_data_chars;) {
+        first_octet = i < user_data_chars ? user_data[i++] : 0;
+        second_octet = i < user_data_chars ? user_data[i++] : 0;
+        third_octet = i < user_data_chars ? user_data[i++] : 0;
+        fourth_octet = i < user_data_chars ? user_data[i++] : 0;
+        fifth_octet = i < user_data_chars ? user_data[i++] : 0;
+        quintuple =
+                ((first_octet >> 3) << 35) +
+                ((((first_octet & 0x7) << 2) | (second_octet >> 6)) << 30) +
+                (((second_octet & 0x3F) >> 1) << 25) +
+                ((((second_octet & 0x01) << 4) | (third_octet >> 4)) << 20) +
+                ((((third_octet & 0xF) << 1) | (fourth_octet >> 7)) << 15) +
+                (((fourth_octet & 0x7F) >> 2) << 10) +
+                ((((fourth_octet & 0x3) << 3) | (fifth_octet >> 5)) << 5) +
+                (fifth_octet & 0x1F);
+
+        encoded_data[j++] = b32_alphabet[(quintuple >> 35) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 30) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 25) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 20) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 15) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 10) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 5) & 0x1F];
+        encoded_data[j++] = b32_alphabet[(quintuple >> 0) & 0x1F];
+    }
+    
+    for (i = 0; i < num_of_equals; i++) {
+        encoded_data[output_length + i] = '=';
+    }
+    encoded_data[output_length + num_of_equals] = '\0';
+
+    return encoded_data;
+}
 
 size_t
 decode_b32key(u8 **k, size_t len)
@@ -130,4 +229,3 @@ decode_b32key(u8 **k, size_t len)
 
     return keylen;
 }
-MODULE_LICENSE("GPL");

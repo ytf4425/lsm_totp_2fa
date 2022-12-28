@@ -12,13 +12,17 @@
  *
  */
 
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef _BASE32_H
+#define _BASE32_H
 
-#include<linux/types.h>
-#include<linux/string.h>
+#include <linux/string.h>
+#include <linux/types.h>
 
-int validate_b32key(char *k, size_t len);
-size_t decode_b32key(u8 **k, size_t len);
+// 64 MB should be more than enough
+#define MAX_ENCODE_INPUT_LEN 64 * 1024 * 1024
+
+int validate_b32key(char* k, size_t len);
+size_t decode_b32key(uint8_t** k, size_t len);
+char* base32_encode(const unsigned char* user_data, size_t data_len);
 
 #endif
