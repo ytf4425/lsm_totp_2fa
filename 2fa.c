@@ -6,12 +6,37 @@
 #include <linux/time64.h>
 #include <linux/timekeeping.h>
 #include <linux/vmalloc.h>
+#include <linux/string.h>
 
 struct hlist_head htable[16];
+const char* conf_path="/etc/security/2fa.conf";
+struct file *conf_file;
 
 void init_hashtable(void)
 {
+    char line[256]; // 256 bytes a line
+    loff_t fpos;
+    ssize_t read_count;
+    struct file_node* file_info;
     hash_init(htable);
+
+    conf_file = filp_open(conf_path, O_RDWR | O_CREAT, 0600);
+    if(IS_ERR(conf_file))
+    {
+        pr_info("cannot open conf.\n");
+        return;
+    }
+
+    fpos = 0;
+    while ((read_count = kernel_read(conf_file, line, sizeof(line), &fpos) > 0)) {
+        file_info = (struct file_node*)vmalloc(sizeof(struct file_node));
+        file_info->path = (char*)vmalloc(sizeof(char) * 256);
+        file_info->code = (char*)vmalloc(sizeof(char) * 256);
+        file_info->state = 0;
+        sscanf(line, "%s %s %d", file_info->path, file_info->code, &(file_info->uid));
+        file_info->hash_value = hash_calc(file_info->path);
+        hash_add(htable, &(file_info->node), file_info->hash_value);
+    }
 }
 
 struct file_node* get_file_info(char* path, int uid)

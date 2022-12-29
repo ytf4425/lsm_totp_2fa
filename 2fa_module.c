@@ -68,6 +68,8 @@ static int __init proc_2fa_init(void)
         memset(path, 0, MAX_BUFF_SIZE);
         memset(key, 0, MAX_BUFF_SIZE);
     }
+
+    init_hashtable();
     return 0;
 }
 
@@ -77,6 +79,9 @@ static void __exit proc_2fa_exit(void)
     vfree(sbuff);
     vfree(path);
     vfree(key);
+    if (!IS_ERR(conf_file)) {
+        filp_close(conf_file, NULL);
+    }
     printk(KERN_INFO "[proc_2fa] module exit.\n");
 }
 
@@ -135,7 +140,7 @@ static ssize_t proc_write_path(struct file* file, const char __user* buffer, siz
 static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t count, loff_t* f_pos)
 {
     // TODO: read state to sbuff
-    
+
     strcpy(key,"M52WQZ3IM5UGU5Q=");
     int a=totp(key);
     pr_info("%d\n",a);
