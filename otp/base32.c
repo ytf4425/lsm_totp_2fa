@@ -94,14 +94,21 @@ base32_encode(const unsigned char *user_data, size_t data_len)
 {
     static const unsigned char b32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     int error;
+    size_t user_data_chars, total_bits, output_length;
+    int num_of_equals;
+    int i, j;
+    uint64_t first_octet, second_octet, third_octet, fourth_octet, fifth_octet;
+    uint64_t quintuple;
+    char *encoded_data;
+
+    user_data_chars = 0;
+    total_bits = 0;
+    num_of_equals = 0;
     error = check_input(user_data, data_len, MAX_ENCODE_INPUT_LEN);
     if (error != 0) {
         return NULL;
     }
 
-    size_t user_data_chars = 0, total_bits = 0;
-    int num_of_equals = 0;
-    int i;
     for (i = 0; i < data_len; i++) {
         // As it's not known whether data_len is with or without the +1 for the null byte, a manual check is required.
         // Check for null byte only at the end of the user given length, otherwise issue#23 may occur
@@ -129,16 +136,13 @@ base32_encode(const unsigned char *user_data, size_t data_len)
             break;
     }
 
-    size_t output_length = (user_data_chars * 8 + 4) / 5;
-    char *encoded_data = vmalloc(output_length + num_of_equals + 1);
+    output_length = (user_data_chars * 8 + 4) / 5;
+    encoded_data = vmalloc(output_length + num_of_equals + 1);
     memset(encoded_data,0,output_length + num_of_equals + 1);
     if (encoded_data == NULL) {
         return NULL;
     }
 
-    uint64_t first_octet, second_octet, third_octet, fourth_octet, fifth_octet;
-    uint64_t quintuple;
-    int j;
     for (i = 0, j = 0; i < user_data_chars;) {
         first_octet = i < user_data_chars ? user_data[i++] : 0;
         second_octet = i < user_data_chars ? user_data[i++] : 0;
