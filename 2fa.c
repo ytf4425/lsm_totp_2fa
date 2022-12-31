@@ -9,6 +9,8 @@
 #include <linux/string.h>
 
 struct hlist_head htable[16];
+EXPORT_SYMBOL(htable);
+
 const char* conf_path="/etc/security/2fa.conf";
 
 void init_hashtable(void)
