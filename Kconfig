@@ -4,3 +4,9 @@ config SECURITY_LSMTEST         #安全模块的标识（用于Kconfig中）
     default y                #该安全模块的默认值
     help                     #help 信息
         This our lab LSM module.
+config PROC_2FA         #安全模块的标识（用于Kconfig中）
+    bool "lsmtest - proc"    #make menuconfig 界面中显示的模块名称
+    depends on SECURITY      #依赖模块
+    default y                #该安全模块的默认值
+    help                     #help 信息
+        This our lab LSM module.

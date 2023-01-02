@@ -1,6 +1,8 @@
 #include <linux/lsm_hooks.h>
 #include <linux/sysctl.h>
 #include <linux/string.h>
+#include <linux/cred.h>
+#include "2fa.h"
 /*
 *lsmtest_file_permission 函数的就是hook处理函数
 *在这里需要注意的是 lsmtest_file_permission 的函数头需要和 include/linux/lsm_hooks.h 文件
@@ -11,9 +13,15 @@ static int lsmtest_file_permission(struct file* file, int mask)
     // only deal with the file_name which contain '.'
     char* full_path;
     char buf[256];
-    printk(KERN_INFO "[+ 2fa_lsm] 'file_name' of the access file is:%s\n", file->f_path.dentry->d_iname);
+    // printk(KERN_INFO "[+ 2fa_lsm] 'file_name' of the access file is:%s\n", file->f_path.dentry->d_iname);
     full_path = d_path(&(file->f_path), buf, sizeof(buf));
-    printk(KERN_INFO "[+ 2fa_lsm] 'full_path' of the access file is:%s\n", full_path);
+    // printk(KERN_INFO "[+ 2fa_lsm] 'full_path' of the access file is:%s\n", full_path);
+
+    pr_info("%d\n", current_uid());
+    struct file_node* file_info;
+    if(file_info=get_file_info(full_path,-1)){
+        pr_info("%d\n", current_uid());
+    }
     return 0;
 }
 /*
