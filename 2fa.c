@@ -64,6 +64,7 @@ struct file_node* get_file_info(char* path, int uid)
     }
     return NULL;
 }
+EXPORT_SYMBOL(get_file_info);
 
 void insert_new_entry(char* path, char* code, int uid){
     struct file_node* new_file_entry=(struct file_node*)vmalloc(sizeof(struct file_node));

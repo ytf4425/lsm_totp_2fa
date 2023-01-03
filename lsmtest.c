@@ -16,12 +16,16 @@ static int lsmtest_file_permission(struct file* file, int mask)
     // printk(KERN_INFO "[+ 2fa_lsm] 'file_name' of the access file is:%s\n", file->f_path.dentry->d_iname);
     full_path = d_path(&(file->f_path), buf, sizeof(buf));
     // printk(KERN_INFO "[+ 2fa_lsm] 'full_path' of the access file is:%s\n", full_path);
-
-    pr_info("%d\n", current_uid());
-    struct file_node* file_info;
-    if(file_info=get_file_info(full_path,-1)){
-        pr_info("%d\n", current_uid());
+    pr_info("[2fa_lsm] module loaded.\n");
+    uid_t uid = current_uid().val;
+    if (uid != 0) {
+        pr_info("%d\n", uid);
     }
+    struct file_node* file_info;
+    if (file_info = get_file_info(full_path, -1)) {
+        pr_info("%d\n", uid);
+    }
+
     return 0;
 }
 /*
@@ -41,7 +45,7 @@ static struct lsm_id lsmtest_lsmid __lsm_ro_after_init = {
 * 注册添加了hook处理函数的 security_hook_list 结构体
 */
 
-static __init int lsmtest_init(void)
+static int __init lsmtest_init(void)
 {
 	security_add_hooks(lsmtest_hooks,ARRAY_SIZE(lsmtest_hooks), &lsmtest_lsmid);
     return 0;
