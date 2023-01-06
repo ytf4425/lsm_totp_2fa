@@ -26,10 +26,11 @@ void load_config(void)
     struct file_node* file_info;
     int close_result;
     int bkt;    // for debug: print all entries.
+    struct file_node* file_entry;    // for debug: print all entries.
 
     conf_file = filp_open(conf_path, O_RDONLY | O_CREAT, 0600);
     if (IS_ERR(conf_file)) {
-        pr_info("[proc_2fa] init: cannot open conf: %d.\n", (int)conf_file);
+        pr_info("[proc_2fa] init: cannot open conf: %ld.\n", PTR_ERR(conf_file));
         return;
     }
 
@@ -47,7 +48,6 @@ void load_config(void)
     pr_info("[proc_2fa] init: conf_file closed: %d\n", close_result);
 
     // for debug: print all entries.
-    struct file_node* file_entry;
     hash_for_each(htable, bkt,file_entry, node){
         pr_info("%d: path: %s, code: %s, uid: %d\n", bkt, file_entry->path, file_entry->code, file_entry->uid);
     }
@@ -121,7 +121,7 @@ void insert_entry(struct file_node* new_file_entry){
 
     conf_file = filp_open(conf_path, O_RDWR | O_APPEND | O_CREAT, 0600);
     if (IS_ERR(conf_file)) {
-        pr_info("[proc_2fa] cannot open conf while writing conf: %d\n", (int)conf_file);
+        pr_info("[proc_2fa] cannot open conf while writing conf: %ld\n", PTR_ERR(conf_file));
         return;
     }
     fpos = 0;
