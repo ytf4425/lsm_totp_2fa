@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <linux/module.h>
 
 char* itoa(int64_t num, char* str, int radix)
 {
@@ -38,3 +39,4 @@ char* itoa(int64_t num, char* str, int radix)
 
     return str; // 返回转换后的字符串
 }
+EXPORT_SYMBOL(itoa);

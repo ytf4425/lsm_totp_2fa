@@ -1,8 +1,5 @@
-#include "2fa.h"
-#include "otp/base32.h"
-#include "otp/rfc4226.h"
-#include "otp/rfc6238.h"
-#include "utils.h"
+#include "../../security/2fa/2fa.h"
+#include "../../security/2fa/utils.h"
 #include <asm/uaccess.h> /* for copy_from_user */
 #include <linux/kernel.h> /* We're doing kernel work */
 #include <linux/module.h> /* Specifically, a module */
@@ -77,7 +74,8 @@ static int __init proc_2fa_init(void)
         memset(key, 0, MAX_BUFF_SIZE);
     }
 
-    init_hashtable();
+    load_config();
+
     return 0;
 }
 
