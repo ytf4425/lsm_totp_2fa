@@ -15,17 +15,20 @@ const char* conf_path="/etc/security/2fa.conf";
 
 void init_hashtable(void)
 {
+    hash_init(htable);
+}
+
+void load_config(void)
+{
     struct file *conf_file;
     char line[256] = { 0 }; // 256 bytes a line
     loff_t fpos;
     ssize_t read_count;
     struct file_node* file_info;
     int close_result;
-    hash_init(htable);
 
     conf_file = filp_open(conf_path, O_RDONLY | O_CREAT, 0600);
-    if(IS_ERR(conf_file))
-    {
+    if (IS_ERR(conf_file)) {
         pr_info("[proc_2fa] init: cannot open conf.\n");
         return;
     }

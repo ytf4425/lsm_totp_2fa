@@ -1,5 +1,4 @@
 #include "2fa.h"
-#include "2fa_proc.h"
 #include "otp/base32.h"
 #include "otp/rfc4226.h"
 #include "otp/rfc6238.h"
@@ -14,6 +13,9 @@
 
 // #include <linux/seq_file.h> /* using seq_printf */
 // #include <linux/slab.h>     /* Using kzalloc */
+
+#define PROCFS_NAME "2fa"
+#define MAX_BUFF_SIZE 2048
 
 static char* sbuff = NULL;
 static struct proc_dir_entry *dir, *fpath, *fkey, *fstate, *fuid;
@@ -45,7 +47,7 @@ static const struct proc_ops uid_fops = {
     .proc_write = proc_write_uid,
 };
 
-int proc_2fa_init(void)
+static int __init proc_2fa_init(void)
 {
     pr_info("[proc_2fa] initializing procfs for 2fa.\n");
     /* prepare procfs */
@@ -79,7 +81,7 @@ int proc_2fa_init(void)
     return 0;
 }
 
-void proc_2fa_exit(void)
+static void __exit proc_2fa_exit(void)
 {
     proc_remove(dir);
     vfree(sbuff);
@@ -223,6 +225,6 @@ static ssize_t proc_write_state(struct file* file, const char __user* buffer, si
     return count;
 }
 
-// module_init(proc_2fa_init);
-// module_exit(proc_2fa_exit);
-// MODULE_LICENSE("GPL");
+module_init(proc_2fa_init);
+module_exit(proc_2fa_exit);
+MODULE_LICENSE("GPL");

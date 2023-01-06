@@ -22,6 +22,7 @@ struct file_node {
 };
 
 void init_hashtable(void);
+void load_config(void);
 struct file_node* get_file_info(char* path, int uid);
 int hash_calc(char* str);
 int unlock(struct file_node* file_info, char* key);

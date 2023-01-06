@@ -3,7 +3,7 @@
 #include <linux/string.h>
 #include <linux/cred.h>
 #include "2fa.h"
-#include "2fa_proc.h"
+
 /*
 *lsm_2fa_file_permission 函数的就是hook处理函数
 *在这里需要注意的是 lsm_2fa_file_permission 的函数头需要和 include/linux/lsm_hooks.h 文件
