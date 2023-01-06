@@ -11,6 +11,10 @@
 struct hlist_head htable[16];
 
 const char* conf_path="/etc/security/2fa.conf";
+const char* primary_conf_path="/etc/security/2fa_primary_code.conf";
+
+static struct file_node* generate_new_entry(const char* path, const char* code, int uid);
+static void insert_entry_to_file(struct file_node* new_file_entry);
 
 void init_hashtable(void)
 {
@@ -19,37 +23,69 @@ void init_hashtable(void)
 
 void load_config(void)
 {
-    struct file *conf_file;
     char line[256] = { 0 }; // 256 bytes a line
+    struct file* conf_file;
+    int close_result;
     loff_t fpos;
     ssize_t read_count;
-    struct file_node* file_info;
-    int close_result;
-    int bkt;    // for debug: print all entries.
-    struct file_node* file_entry;    // for debug: print all entries.
+    char *read_path, *read_code;
+    int read_uid;
+    struct file_node* new_file_entry;
+    int bkt; // for debug: print all entries.
 
+    /** add all 2fa entries except primary code */
     conf_file = filp_open(conf_path, O_RDONLY | O_CREAT, 0600);
     if (IS_ERR(conf_file)) {
         pr_info("[proc_2fa] init: cannot open conf: %ld.\n", PTR_ERR(conf_file));
         return;
     }
 
+    read_path = (char*)vmalloc(sizeof(char) * 256);
+    read_code = (char*)vmalloc(sizeof(char) * 256);
     fpos = 0;
     while ((read_count = kernel_read(conf_file, line, sizeof(line), &fpos) > 0)) {
-        file_info = (struct file_node*)vmalloc(sizeof(struct file_node));
-        file_info->path = (char*)vmalloc(sizeof(char) * 256);
-        file_info->code = (char*)vmalloc(sizeof(char) * 256);
-        file_info->state = LOCKED;
-        sscanf(line, "%s %s %d", file_info->path, file_info->code, &(file_info->uid));
-        file_info->hash_value = hash_calc(file_info->path);
-        hash_add(htable, &(file_info->node), file_info->hash_value);
+        sscanf(line, "%s %s %d", read_path, read_code, &read_uid);
+        new_file_entry = generate_new_entry(read_path, read_code, read_uid);
+        hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
     }
     close_result = filp_close(conf_file, NULL);
     pr_info("[proc_2fa] init: conf_file closed: %d\n", close_result);
+    /** add all 2fa entries end */
+
+    /** add primary code for conf_file */
+    conf_file = filp_open(primary_conf_path, O_RDONLY | O_CREAT, 0600);
+    if (IS_ERR(conf_file)) {
+        pr_info("[proc_2fa] init: cannot open primary code conf: %ld.\n", PTR_ERR(conf_file));
+        return;
+    }
+
+    if ((read_count = kernel_read(conf_file, line, sizeof(line), &fpos) > 0)) {
+        sscanf(line, "%s", read_code);
+    } else {
+        pr_info("[proc_2fa] init: primary code load failed.\n");
+        // clean
+        close_result = filp_close(conf_file, NULL);
+        vfree(read_path);
+        vfree(read_code);
+        return;
+    }
+    close_result = filp_close(conf_file, NULL);
+    pr_info("[proc_2fa] init: primary_conf_file closed: %d\n", close_result);
+
+    new_file_entry = generate_new_entry(conf_path, read_code, -1);
+    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+    new_file_entry = generate_new_entry(primary_conf_path, read_code, -1);
+    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+    /** add primary code end */
+
+    // do some cleaning
+    vfree(read_path);
+    vfree(read_code);
 
     // for debug: print all entries.
-    hash_for_each(htable, bkt,file_entry, node){
-        pr_info("%d: path: %s, code: %s, uid: %d\n", bkt, file_entry->path, file_entry->code, file_entry->uid);
+    hash_for_each(htable, bkt, new_file_entry, node)
+    {
+        pr_info("%d: path: %s, code: %s, uid: %d\n", bkt, new_file_entry->path, new_file_entry->code, new_file_entry->uid);
     }
 }
 
@@ -88,7 +124,7 @@ int check_permission(char* path, int uid)
     return state;
 }
 
-void insert_new_entry(char* path, char* code, int uid){
+static struct file_node* generate_new_entry(const char* path, const char* code, int uid){
     struct file_node* new_file_entry=(struct file_node*)vmalloc(sizeof(struct file_node));
     new_file_entry->path = (char*)vmalloc(sizeof(char) * 256);
     new_file_entry->code = (char*)vmalloc(sizeof(char) * 256);
@@ -98,7 +134,15 @@ void insert_new_entry(char* path, char* code, int uid){
     new_file_entry->hash_value = hash_calc(path);
     new_file_entry->state = LOCKED;
     new_file_entry->uid=uid;
-    insert_entry(new_file_entry);
+
+    return new_file_entry;
+}
+
+void insert_new_entry(char* path, char* code, int uid)
+{
+    struct file_node* new_file_entry = generate_new_entry(path, code, uid);
+    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+    insert_entry_to_file(new_file_entry);
 }
 
 void delete_entry(struct file_node* now_file){
@@ -110,12 +154,10 @@ void delete_entry(struct file_node* now_file){
     vfree(now_file);
 }
 
-void insert_entry(struct file_node* new_file_entry){
+static void insert_entry_to_file(struct file_node* new_file_entry){
     char line[256] = { 0 }; // 256 bytes a line
     struct file *conf_file;
     loff_t fpos;
-
-    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
 
     sprintf(line, "%s\t%s\t%d\n", new_file_entry->path, new_file_entry->code, new_file_entry->uid);
 
@@ -129,7 +171,7 @@ void insert_entry(struct file_node* new_file_entry){
     filp_close(conf_file, NULL);
 }
 
-int hash_calc(char* str)
+int hash_calc(const char* str)
 {
     int i, ret;
     for (i = 0, ret = 0; str[i] != 0; i++) {

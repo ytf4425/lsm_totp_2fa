@@ -25,13 +25,12 @@ void init_hashtable(void);
 void load_config(void);
 struct file_node* get_file_info(char* path, int uid);
 int check_permission(char* path, int uid);
-int hash_calc(char* str);
+int hash_calc(const char* str);
 int unlock(struct file_node* file_info, char* key);
 int lock(struct file_node* file_info);
 int totp(char* key);
 char* get_new_2fa_code(void);
 void insert_new_entry(char* path, char* code, int uid);
-void insert_entry(struct file_node* new_file_entry);
 void delete_entry(struct file_node* now_file);
 
 // extern struct file *conf_file;
