@@ -13,16 +13,10 @@ static int lsm_2fa_file_permission(struct file* file, int mask)
 {
     char* full_path;
     char buf[256];
-    // printk(KERN_INFO "[+ 2fa_lsm] 'file_name' of the access file is:%s\n", file->f_path.dentry->d_iname);
     full_path = d_path(&(file->f_path), buf, sizeof(buf));
-    // printk(KERN_INFO "[+ 2fa_lsm] 'full_path' of the access file is:%s\n", full_path);
     uid_t uid = current_uid().val;
 
-    struct file_node* file_info;
-    if (file_info = get_file_info(full_path, -1)) {
-        pr_info("%d\n", uid);
-    }
-    return 0;
+    return check_permission(full_path, uid);
 }
 /*
  *LSM_HOOK_INIT 就是将file_permission hook 和 处理函数 lsm_2fa_file_permission 关联起来，并

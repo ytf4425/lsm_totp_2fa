@@ -38,7 +38,7 @@ void load_config(void)
         file_info = (struct file_node*)vmalloc(sizeof(struct file_node));
         file_info->path = (char*)vmalloc(sizeof(char) * 256);
         file_info->code = (char*)vmalloc(sizeof(char) * 256);
-        file_info->state = 0;
+        file_info->state = LOCKED;
         sscanf(line, "%s %s %d", file_info->path, file_info->code, &(file_info->uid));
         file_info->hash_value = hash_calc(file_info->path);
         hash_add(htable, &(file_info->node), file_info->hash_value);
@@ -58,13 +58,34 @@ struct file_node* get_file_info(char* path, int uid)
     int hash_value = hash_calc(path);
     struct file_node* file_entry;
     hash_for_each_possible(htable, file_entry, node, hash_value) {
-        if (file_entry->hash_value == hash_value) {
-            if (strcmp(file_entry->path, path) == 0 && file_entry->uid == uid) {
-                return file_entry;
-            }
+        if (file_entry->hash_value != hash_value)
+            continue;
+        if (strcmp(file_entry->path, path) == 0 && file_entry->uid == uid) {
+            return file_entry;
         }
     }
     return NULL;
+}
+
+int check_permission(char* path, int uid)
+{
+    int hash_value = hash_calc(path);
+    struct file_node* file_entry;
+    int state = UNLOCKED;
+
+    hash_for_each_possible(htable, file_entry, node, hash_value)
+    {
+        if (file_entry->hash_value != hash_value)
+            continue;
+        if (strcmp(file_entry->path, path) != 0)
+            continue;
+
+        if (file_entry->uid == uid)
+            return file_entry->state; // exact match first
+        else if (file_entry->uid == -1)
+            state = file_entry->state;
+    }
+    return state;
 }
 
 void insert_new_entry(char* path, char* code, int uid){
@@ -75,7 +96,7 @@ void insert_new_entry(char* path, char* code, int uid){
     strcpy(new_file_entry->code, code);
     strcpy(new_file_entry->path, path);
     new_file_entry->hash_value = hash_calc(path);
-    new_file_entry->state=0;
+    new_file_entry->state = LOCKED;
     new_file_entry->uid=uid;
     insert_entry(new_file_entry);
 }

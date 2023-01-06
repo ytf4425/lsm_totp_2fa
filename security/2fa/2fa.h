@@ -1,11 +1,11 @@
 #ifndef _2FA_H
 #define _2FA_H
 
-#define LOCKED 0
-#define UNLOCKED 1
+#define UNLOCKED 0
+#define LOCKED 1
 
-#define LOCK 0
-#define UNLOCK 1
+#define UNLOCK 0
+#define LOCK 1
 #define ADD 2
 #define DELETE 3
 
@@ -24,6 +24,7 @@ struct file_node {
 void init_hashtable(void);
 void load_config(void);
 struct file_node* get_file_info(char* path, int uid);
+int check_permission(char* path, int uid);
 int hash_calc(char* str);
 int unlock(struct file_node* file_info, char* key);
 int lock(struct file_node* file_info);
