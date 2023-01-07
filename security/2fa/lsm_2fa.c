@@ -13,8 +13,10 @@ static int lsm_2fa_file_open(struct file* file)
 {
     char* full_path;
     char buf[256];
+    uid_t uid;
+
     full_path = d_path(&(file->f_path), buf, sizeof(buf));
-    uid_t uid = current_uid().val;
+    uid = current_uid().val;
 
     return check_permission(full_path, uid);
 }
