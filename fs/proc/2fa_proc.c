@@ -159,15 +159,15 @@ static ssize_t proc_write_uid(struct file* file, const char __user* buffer, size
 
 static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t count, loff_t* f_pos)
 {
+    char str[10];
+
     now_file = get_file_info(path, uid);
     if (now_file == NULL) {
         printk(KERN_INFO "[proc_2fa]: can not find 2fa entry.\n");
         return -EFAULT;
     }
 
-    char str[10];
     sprintf(str, now_file->state == UNLOCKED ? "unlocked" : "locked");
-
     count = strlen(str);
     if (*f_pos >= count) {
         return 0;

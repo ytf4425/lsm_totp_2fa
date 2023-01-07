@@ -223,14 +223,19 @@ int lock(struct file_node* file_info)
 int unlock(struct file_node* file_info, const char* key)
 {
     int key_in;
+    char* key_true = (char*)vmalloc(sizeof(char) * 256);
     sscanf(key, "%d", &key_in);
-    if (totp(file_info->code) == key_in) {
+    strcpy(key_true,file_info->code);
+
+    if (totp(key_true) == key_in) {
         file_info->state = UNLOCKED;
         printk(KERN_INFO "[proc_2fa]: %s unlocked.\n", file_info->path);
     } else {
         printk(KERN_INFO "[proc_2fa]: %s failed to be unlocked.\n", file_info->path);
+        vfree(key_true);
         return -EFAULT;
     }
+    vfree(key_true);
     return 0;
 }
 
