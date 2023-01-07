@@ -160,20 +160,21 @@ static ssize_t proc_write_uid(struct file* file, const char __user* buffer, size
 
 static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t count, loff_t* f_pos)
 {
-    // TODO: read state to sbuff
+    now_file = get_file_info(path, uid);
+    if (now_file == NULL) {
+        printk(KERN_INFO "[proc_2fa]: can not find 2fa entry.\n");
+        return -EFAULT;
+    }
 
-    struct file_node* file_info = get_file_info("/etc/security/2fa.conf", -1);
-    strcpy(key, file_info->code);
-    int a = totp(key);
-    pr_info("%d\n", a);
-    char* stra = (char*)vmalloc(100);
-    itoa(a, stra, 10);
-    count = strlen(stra);
+    char str[10];
+    sprintf(str, now_file->state == UNLOCKED ? "unlocked" : "locked");
+
+    count = strlen(str);
     if (*f_pos >= count) {
         return 0;
     }
     count -= *f_pos;
-    if (copy_to_user(buffer, stra + *f_pos, count)) {
+    if (copy_to_user(buffer, str + *f_pos, count)) {
         return -EFAULT;
     }
     *f_pos += count;
