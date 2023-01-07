@@ -6,7 +6,7 @@ def write_file(path, uid, command, code=None):
     with open('/proc/2fa/path', 'w') as f:
         f.write(path)
     if code is not None:
-        with open('/proc/2fa/code', 'w') as f:
+        with open('/proc/2fa/key', 'w') as f:
             f.write(code)
     with open('/proc/2fa/uid', 'w') as f:
         f.write(uid)
