@@ -185,13 +185,13 @@ int hash_calc(const char* str)
     return ret;
 }
 
-char* get_new_2fa_code(void)
-{
-    time64_t timenow = ktime_get_real_seconds();
-    char* str = (char*)vmalloc(sizeof(char) * 17); // timestamp need 10 chars, 16 bytes base32 code
-    itoa(timenow, str, 10);
-    return base32_encode(str, 10);
-}
+// char* get_new_2fa_code(void)
+// {
+//     time64_t timenow = ktime_get_real_seconds();
+//     char* str = (char*)vmalloc(sizeof(char) * 17); // timestamp need 10 chars, 16 bytes base32 code
+//     itoa(timenow, str, 10);
+//     return base32_encode(str, 10);
+// }
 
 int totp(char* key)
 {
@@ -244,9 +244,9 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
             return -EFAULT;
         break;
     case ADD:
-        char* new_code = get_new_2fa_code();
-        insert_new_entry(path, new_code, uid);
-        vfree(new_code);
+        // char* new_code = get_new_2fa_code();
+        insert_new_entry(path, key, uid);
+        // vfree(new_code);
         break;
     case DELETE:
         file_info = get_file_info(path, uid);
@@ -267,7 +267,6 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
 EXPORT_SYMBOL(lock);
 EXPORT_SYMBOL(unlock);
 EXPORT_SYMBOL(get_file_info);
-EXPORT_SYMBOL(get_new_2fa_code);
 EXPORT_SYMBOL(load_config);
 EXPORT_SYMBOL(hash_calc);
 EXPORT_SYMBOL(totp);
