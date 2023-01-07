@@ -187,6 +187,7 @@ static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t co
 static ssize_t proc_write_state(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos)
 {
     int new_state;
+    int err;
 
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
 
@@ -202,7 +203,9 @@ static ssize_t proc_write_state(struct file* file, const char __user* buffer, si
     }
     
     sscanf(sbuff, "%d", &new_state);
-    execute_command(now_file, new_state, path, key, uid);
+    err = execute_command(now_file, new_state, path, key, uid);
+    if (err)
+        return err;
     return count;
 }
 
