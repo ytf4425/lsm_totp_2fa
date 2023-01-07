@@ -222,9 +222,10 @@ int lock(struct file_node* file_info)
 
 int unlock(struct file_node* file_info, const char* key)
 {
-    // TODO: check
-    if (1) {
-        // TODO: unlock
+    int key_in;
+    sscanf(key, "%d", &key_in);
+    if (totp(file_info->code) == key_in) {
+        file_info->state = UNLOCKED;
         printk(KERN_INFO "[proc_2fa]: %s unlocked.\n", file_info->path);
     } else {
         printk(KERN_INFO "[proc_2fa]: %s failed to be unlocked.\n", file_info->path);
