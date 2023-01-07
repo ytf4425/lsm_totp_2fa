@@ -94,6 +94,7 @@ static void __exit proc_2fa_exit(void)
 static ssize_t proc_write_key(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos)
 {
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
+    memset(sbuff, 0, MAX_BUFF_SIZE);
 
     if (copy_from_user(sbuff, buffer, count)) { // error
         printk(KERN_INFO "[proc_2fa]: copy_from_user() error!\n");
@@ -122,6 +123,7 @@ static ssize_t proc_read_path(struct file* file, char __user* buffer, size_t cou
 static ssize_t proc_write_path(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos)
 {
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
+    memset(sbuff, 0, MAX_BUFF_SIZE);
 
     if (copy_from_user(sbuff, buffer, count)) { // error
         printk(KERN_INFO "[proc_2fa]: copy_from_user() error!\n");
@@ -136,6 +138,7 @@ static ssize_t proc_write_path(struct file* file, const char __user* buffer, siz
 static ssize_t proc_write_uid(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos)
 {
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
+    memset(sbuff, 0, MAX_BUFF_SIZE);
 
     if (copy_from_user(sbuff, buffer, count)) { // error
         printk(KERN_INFO "[proc_2fa]: copy_from_user() error!\n");
@@ -176,6 +179,7 @@ static ssize_t proc_write_state(struct file* file, const char __user* buffer, si
     int err;
 
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
+    memset(sbuff, 0, MAX_BUFF_SIZE);
 
     if (copy_from_user(sbuff, buffer, count)) { // error
         printk(KERN_INFO "[proc_2fa]: copy_from_user() error!\n");
