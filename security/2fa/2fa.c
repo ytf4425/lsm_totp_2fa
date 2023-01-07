@@ -243,17 +243,14 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
 {
     switch (new_state) {
     case LOCK:
-        lock(file_info);
-        break;
+        return lock(file_info);
     case UNLOCK:
-        if (unlock(file_info, key))
-            return -EFAULT;
-        break;
+        return unlock(file_info, key);
     case ADD:
         // char* new_code = get_new_2fa_code();
         insert_new_entry(path, key, uid);
         // vfree(new_code);
-        break;
+        return 0;
     case DELETE:
         file_info = get_file_info(path, uid);
         if (file_info == NULL)
@@ -261,13 +258,11 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
         if (file_info->state != UNLOCKED)
             return -EFAULT;
         delete_entry(file_info);
-        break;
+        return 0;
     default:
         printk(KERN_INFO "[proc_2fa]: /proc/2fa/state got unavaliable input.\n");
         return -EFAULT;
-        break;
     }
-    return 0;
 }
 
 EXPORT_SYMBOL(lock);
