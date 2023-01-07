@@ -183,7 +183,6 @@ static ssize_t proc_read_state(struct file* file, char __user* buffer, size_t co
 static ssize_t proc_write_state(struct file* file, const char __user* buffer, size_t count, loff_t* f_pos)
 {
     int new_state;
-    struct file_node file_info;
 
     count = count < MAX_BUFF_SIZE ? count : MAX_BUFF_SIZE;
 
@@ -193,33 +192,7 @@ static ssize_t proc_write_state(struct file* file, const char __user* buffer, si
     }
 
     sscanf(sbuff, "%d", &new_state);
-    switch (new_state) {
-    case LOCK:
-        lock(&file_info);
-        break;
-    case UNLOCK:
-        if (unlock(&file_info, key))
-            return -EFAULT;
-        break;
-    case ADD:
-        char* new_code = get_new_2fa_code();
-        insert_new_entry(path, new_code, uid);
-        vfree(new_code);
-        break;
-    case DELETE:
-        now_file = get_file_info(path, uid);
-        if (now_file == NULL)
-            return -EFAULT;
-        if (now_file->state != UNLOCKED)
-            return -EFAULT;
-        delete_entry(now_file);
-        break;
-    default:
-        printk(KERN_INFO "[proc_2fa]: /proc/2fa/state got unavaliable input.\n");
-        return -EFAULT;
-        break;
-    }
-
+    execute_command(now_file, new_state, path, key, uid);
     return count;
 }
 

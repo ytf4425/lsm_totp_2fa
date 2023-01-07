@@ -90,7 +90,7 @@ void load_config(void)
     }
 }
 
-struct file_node* get_file_info(char* path, int uid)
+struct file_node* get_file_info(const char* path, int uid)
 {
     int hash_value = hash_calc(path);
     struct file_node* file_entry;
@@ -143,7 +143,7 @@ static struct file_node* generate_new_entry(const char* path, const char* code, 
     return new_file_entry;
 }
 
-void insert_new_entry(char* path, char* code, int uid)
+void insert_new_entry(const char* path, const char* code, int uid)
 {
     struct file_node* new_file_entry = generate_new_entry(path, code, uid);
     hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
@@ -220,7 +220,7 @@ int lock(struct file_node* file_info)
     return 0;
 }
 
-int unlock(struct file_node* file_info, char* key)
+int unlock(struct file_node* file_info, const char* key)
 {
     // TODO: check
     if (1) {
@@ -229,6 +229,37 @@ int unlock(struct file_node* file_info, char* key)
     } else {
         printk(KERN_INFO "[proc_2fa]: %s failed to be unlocked.\n", file_info->path);
         return -EFAULT;
+    }
+    return 0;
+}
+
+int execute_command(struct file_node* file_info, int new_state, const char* path, const char* key, int uid)
+{
+    switch (new_state) {
+    case LOCK:
+        lock(file_info);
+        break;
+    case UNLOCK:
+        if (unlock(file_info, key))
+            return -EFAULT;
+        break;
+    case ADD:
+        char* new_code = get_new_2fa_code();
+        insert_new_entry(path, new_code, uid);
+        vfree(new_code);
+        break;
+    case DELETE:
+        file_info = get_file_info(path, uid);
+        if (file_info == NULL)
+            return -EFAULT;
+        if (file_info->state != UNLOCKED)
+            return -EFAULT;
+        delete_entry(file_info);
+        break;
+    default:
+        printk(KERN_INFO "[proc_2fa]: /proc/2fa/state got unavaliable input.\n");
+        return -EFAULT;
+        break;
     }
     return 0;
 }
@@ -242,3 +273,4 @@ EXPORT_SYMBOL(hash_calc);
 EXPORT_SYMBOL(totp);
 EXPORT_SYMBOL(insert_new_entry);
 EXPORT_SYMBOL(delete_entry);
+EXPORT_SYMBOL(execute_command);
