@@ -230,13 +230,13 @@ int unlock(struct file_node* file_info, const char* key)
     if (totp(key_true) == key_in) {
         file_info->state = UNLOCKED;
         printk(KERN_INFO "[proc_2fa]: %s unlocked.\n", file_info->path);
+        vfree(key_true);
+        return 0;
     } else {
         printk(KERN_INFO "[proc_2fa]: %s failed to be unlocked.\n", file_info->path);
         vfree(key_true);
         return -EFAULT;
     }
-    vfree(key_true);
-    return 0;
 }
 
 int execute_command(struct file_node* file_info, int new_state, const char* path, const char* key, int uid)
