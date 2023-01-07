@@ -5,11 +5,11 @@
 #include "2fa.h"
 
 /*
-*lsm_2fa_file_permission 函数的就是hook处理函数
-*在这里需要注意的是 lsm_2fa_file_permission 的函数头需要和 include/linux/lsm_hooks.h 文件
-*中对应hook的函数头保持一致（在这里就是和 ’file_permission‘ hook的函数头对应） 
+*lsm_2fa_file_open 函数的就是hook处理函数
+*在这里需要注意的是 lsm_2fa_file_open 的函数头需要和 include/linux/lsm_hooks.h 文件
+*中对应hook的函数头保持一致（在这里就是和 ’file_open‘ hook的函数头对应） 
 */
-static int lsm_2fa_file_permission(struct file* file, int mask)
+static int lsm_2fa_file_open(struct file* file)
 {
     char* full_path;
     char buf[256];
@@ -19,11 +19,11 @@ static int lsm_2fa_file_permission(struct file* file, int mask)
     return check_permission(full_path, uid);
 }
 /*
- *LSM_HOOK_INIT 就是将file_permission hook 和 处理函数 lsm_2fa_file_permission 关联起来，并
+ *LSM_HOOK_INIT 就是将file_open hook 和 处理函数 lsm_2fa_file_open 关联起来，并
  *添加到 security_hook_list 结构体中
  */
 static struct security_hook_list lsm_2fa_hooks[] __lsm_ro_after_init = {
-		LSM_HOOK_INIT(file_permission,lsm_2fa_file_permission),
+		LSM_HOOK_INIT(file_open,lsm_2fa_file_open),
 };
 
 static struct lsm_id lsm_2fa_lsmid __lsm_ro_after_init = {
