@@ -30,18 +30,22 @@ static ssize_t proc_write_uid(struct file* file, const char __user* buffer, size
 static const struct proc_ops path_fops = {
     .proc_read = proc_read_path,
     .proc_write = proc_write_path,
+    .proc_lseek = noop_llseek,
 };
 static const struct proc_ops key_fops = {
     .proc_write = proc_write_key,
+    .proc_lseek = noop_llseek,
 };
 
 static const struct proc_ops state_fops = {
     .proc_read = proc_read_state,
     .proc_write = proc_write_state,
+    .proc_lseek = noop_llseek,
 };
 
 static const struct proc_ops uid_fops = {
     .proc_write = proc_write_uid,
+    .proc_lseek = noop_llseek,
 };
 
 static int __init proc_2fa_init(void)
