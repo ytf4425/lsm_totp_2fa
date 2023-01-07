@@ -33,6 +33,9 @@ void load_config(void)
     struct file_node* new_file_entry;
     int bkt; // for debug: print all entries.
 
+    read_path = (char*)vmalloc(sizeof(char) * 256);
+    read_code = (char*)vmalloc(sizeof(char) * 256);
+
     /** add all 2fa entries except primary code */
     conf_file = filp_open(conf_path, O_RDONLY | O_CREAT, 0600);
     if (IS_ERR(conf_file)) {
@@ -40,8 +43,6 @@ void load_config(void)
         return;
     }
 
-    read_path = (char*)vmalloc(sizeof(char) * 256);
-    read_code = (char*)vmalloc(sizeof(char) * 256);
     fpos = 0;
     while ((read_count = kernel_read(conf_file, line, sizeof(line), &fpos) > 0)) {
         sscanf(line, "%s %s %d", read_path, read_code, &read_uid);
@@ -58,11 +59,11 @@ void load_config(void)
         pr_info("[proc_2fa] init: cannot open primary code conf: %ld.\n", PTR_ERR(conf_file));
         return;
     }
-
+    fpos = 0;
     if ((read_count = kernel_read(conf_file, line, sizeof(line), &fpos) > 0)) {
         sscanf(line, "%s", read_code);
     } else {
-        pr_info("[proc_2fa] init: primary code load failed.\n");
+        pr_info("[proc_2fa] init: primary code load failed, read_count is %ld.\n", read_count);
         // clean
         close_result = filp_close(conf_file, NULL);
         vfree(read_path);
@@ -116,10 +117,14 @@ int check_permission(char* path, int uid)
         if (strcmp(file_entry->path, path) != 0)
             continue;
 
-        if (file_entry->uid == uid)
+        if (file_entry->uid == uid) {
+            pr_info("[2fa_lsm] pemission denied: access %s with uid %d.\n", path, uid);
             return file_entry->state; // exact match first
-        else if (file_entry->uid == -1)
+        } else if (file_entry->uid == -1){
             state = file_entry->state;
+            if (state == LOCKED)
+                pr_info("[2fa_lsm] access pemission denied %s for all unspecified users, but it may be accessible for user %d\n", path, uid);
+        }
     }
     return state;
 }
