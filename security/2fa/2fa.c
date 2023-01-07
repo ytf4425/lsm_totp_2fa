@@ -215,7 +215,7 @@ int totp(char* key)
 
 int lock(struct file_node* file_info)
 {
-    // TODO: lock
+    file_info->state = LOCKED;
     printk(KERN_INFO "[proc_2fa]: %s locked.\n", file_info->path);
     return 0;
 }
