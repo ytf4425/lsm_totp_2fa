@@ -14,21 +14,21 @@ def write_file(path, uid, command, code=None):
         f.write(command)
 
 
-def lock(path, uid=os.geteuid()):
+def lock(path, uid=str(os.geteuid())):
     try:
         write_file(path=path, command=1, uid=uid)
     except:
         print('lock failed: path is {}, uid is {}.'.format(path, uid))
 
 
-def unlock(path, code, uid=os.geteuid()):
+def unlock(path, code, uid=str(os.geteuid())):
     try:
         write_file(path=path, code=code, command=0, uid=uid)
     except:
         print('unlock failed: path is {}, uid is {}.'.format(path, uid))
 
 
-def query(path, uid=os.geteuid()):
+def query(path, uid=str(os.geteuid())):
     with open('/proc/2fa/path', 'w') as f:
         f.write(path)
     with open('/proc/2fa/uid', 'w') as f:
@@ -40,7 +40,7 @@ def query(path, uid=os.geteuid()):
             print('query failed: path is {}, uid is {}.'.format(path, uid))
 
 
-def delete(path, uid=os.geteuid(), code=None):
+def delete(path, uid=str(os.geteuid()), code=None):
     try:
         write_file(path=path, code=code, command=3, uid=uid)
     except:
@@ -51,7 +51,7 @@ def new_2fa_code():
  pass
 
 
-def add(path, uid=os.geteuid()):
+def add(path, uid=str(os.geteuid())):
     try:
         write_file(path=path, code=new_2fa_code(), command=2, uid=uid)
     except:
