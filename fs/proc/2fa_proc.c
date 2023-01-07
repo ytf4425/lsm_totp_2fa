@@ -101,11 +101,7 @@ static ssize_t proc_write_key(struct file* file, const char __user* buffer, size
     }
 
     sscanf(sbuff, "%s", key);
-
-    if (strlen(key) != 6) {
-        printk(KERN_INFO "[proc_2fa]: /proc/2fa/key got unavaliable input.\n");
-        return -EFAULT;
-    }
+    pr_info("[proc_2fa]: set key to %s, strlen(key) is %lu.\n", key, strlen(key));
     return count;
 }
 
@@ -133,12 +129,7 @@ static ssize_t proc_write_path(struct file* file, const char __user* buffer, siz
     }
 
     sscanf(sbuff, "%s", path);
-
-    // TODO: check path
-    if (0) {
-        printk(KERN_INFO "[proc_2fa]: /proc/2fa/path got unavaliable input.\n");
-        return -EFAULT;
-    }
+    pr_info("[proc_2fa]: set path to %s.\n", path);
     return count;
 }
 
@@ -152,12 +143,7 @@ static ssize_t proc_write_uid(struct file* file, const char __user* buffer, size
     }
 
     sscanf(sbuff, "%d", &uid);
-
-    // TODO: check path
-    if (0) {
-        printk(KERN_INFO "[proc_2fa]: /proc/2fa/path got unavaliable input.\n");
-        return -EFAULT;
-    }
+    pr_info("[proc_2fa]: set uid to %d.\n", uid);
     return count;
 }
 
