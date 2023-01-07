@@ -58,8 +58,6 @@ static int __init proc_2fa_init(void)
         fuid=proc_create("uid", 0777, dir, &uid_fops);
         if (fpath == NULL || fkey == NULL || fstate == NULL || fuid == NULL)
             return -ENOMEM;
-        else
-            printk(KERN_INFO "[proc_2fa] module loaded.\n");
     }
 
     /* init buff */
@@ -75,7 +73,8 @@ static int __init proc_2fa_init(void)
     }
 
     load_config();
-
+    
+    printk(KERN_INFO "[proc_2fa] module loaded.\n");
     return 0;
 }
 
