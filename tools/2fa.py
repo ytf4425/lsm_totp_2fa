@@ -60,11 +60,9 @@ def add(path, uid=str(os.geteuid())):
 
 def print_err():
     print("error: wrong args number.")
-    print("usage: python " + sys.argv[0] + " { lock | query } path [uid]")
+    print("usage: python " + sys.argv[0] + " { lock | query | add } path [uid]")
     print("       python " + sys.argv[0] + " unlock path 2fa_code [uid]")
-    print("       python " + sys.argv[0] + " add path [uid]")
-    print("       python " + sys.argv[0] + " delete path [2fa_code uid]")
-
+    print("       python " + sys.argv[0] + " delete path [-c 2fa_code] [-u uid]")
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
@@ -74,22 +72,41 @@ if __name__ == "__main__":
             lock(sys.argv[2])
         elif sys.argv[1] == 'add':
             add(sys.argv[2])
+        elif sys.argv[1] == 'delete':
+            delete(sys.argv[2])
         else:
             print_err()
     elif len(sys.argv) == 4:
         if sys.argv[1] == 'unlock':
             unlock(sys.argv[2], sys.argv[3])
+        elif sys.argv[1] == 'query':
+            query(sys.argv[2], sys.argv[3])
+        elif sys.argv[1] == 'lock':
+            lock(sys.argv[2], sys.argv[3])
         elif sys.argv[1] == 'add':
             add(sys.argv[2], sys.argv[3])
-        elif sys.argv[1] == 'delete':
-            delete(sys.argv[2], sys.argv[3])
         else:
             print_err()
     elif len(sys.argv) == 5:
         if sys.argv[1] == 'unlock':
             unlock(sys.argv[2], sys.argv[3], sys.argv[4])
         elif sys.argv[1] == 'delete':
-            delete(sys.argv[2], sys.argv[4], sys.argv[3])
+            if sys.argv[3] == '-c':
+                delete(sys.argv[2], code = sys.argv[4])
+            elif sys.argv[3] == '-u':
+                delete(sys.argv[2], uid = sys.argv[4])
+            else:
+                print_err()
+        else:
+            print_err()
+    elif len(sys.argv) == 7:
+        if sys.argv[1] == 'delete':
+            if sys.argv[3] == '-c' and sys.argv[5] == '-u':
+                delete(sys.argv[2], code = sys.argv[4],uid = sys.argv[6])
+            elif sys.argv[5] == '-c' and sys.argv[3] == '-u':
+                delete(sys.argv[2], code = sys.argv[6],uid = sys.argv[4])
+            else:
+                print_err()
         else:
             print_err()
     else:
