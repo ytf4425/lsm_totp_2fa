@@ -324,12 +324,6 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
     }
 }
 
-EXPORT_SYMBOL(lock);
-EXPORT_SYMBOL(unlock);
 EXPORT_SYMBOL(get_file_info);
 EXPORT_SYMBOL(load_config);
-EXPORT_SYMBOL(hash_calc);
-EXPORT_SYMBOL(totp);
-EXPORT_SYMBOL(insert_new_entry);
-EXPORT_SYMBOL(delete_entry);
 EXPORT_SYMBOL(execute_command);
