@@ -16,7 +16,7 @@ const char* primary_conf_path="/etc/security/2fa_primary_code.conf";
 static struct file_node* generate_new_entry(const char* path, const char* code, int uid);
 static int insert_entry_to_file(struct file_node* new_file_entry);
 static int add(struct file_node* file_info, const char* path, const char* key, int uid);
-static int update_config_file(void);
+static int update_config_file(struct file* conf_file);
 
 void init_hashtable(void)
 {
@@ -169,33 +169,32 @@ int delete_entry(struct file_node* now_file, const char* key)
     // test file permission
     conf_file = filp_open(conf_path, O_WRONLY | O_CREAT, 0600);
     if (IS_ERR(conf_file)) {
-        pr_info("[proc_2fa] init: cannot open conf: %ld.\n", PTR_ERR(conf_file));
-        return -PTR_ERR(conf_file);
+        pr_info("[proc_2fa] delete: cannot open conf: %ld.\n", PTR_ERR(conf_file));
+        return PTR_ERR(conf_file);
     }
 
     hash_del(&(now_file->node));
-    err = update_config_file();
+    err = update_config_file(conf_file);
+    if (err) {
+        filp_close(conf_file, NULL);
+        return err;
+    }
 
     vfree(now_file->path);
     vfree(now_file->code);
     vfree(now_file);
+    err = filp_close(conf_file, NULL);
+    pr_info("[proc_2fa] update_config_file: conf_file closed: %d\n", err);
     return err;
 }
 
-static int update_config_file(void) {
-    struct file* conf_file;
-    int close_result;
+static int update_config_file(struct file* conf_file) {
     loff_t fpos;
     struct file_node* new_file_entry;
     int bkt;
+    int err;
 
     /** write all 2fa entries except primary code */
-    conf_file = filp_open(conf_path, O_WRONLY | O_CREAT, 0600);
-    if (IS_ERR(conf_file)) {
-        pr_info("[proc_2fa] init: cannot open conf: %ld.\n", PTR_ERR(conf_file));
-        return -PTR_ERR(conf_file);
-    }
-
     fpos = 0;
     hash_for_each(htable, bkt, new_file_entry, node)
     {
@@ -203,13 +202,11 @@ static int update_config_file(void) {
             && (new_file_entry->uid == -1 || new_file_entry->uid == 0))
             continue;
 
-        insert_entry_to_file(new_file_entry);
+        err = insert_entry_to_file(new_file_entry);
     }
-    close_result = filp_close(conf_file, NULL);
-    pr_info("[proc_2fa] update_config_file: conf_file closed: %d\n", close_result);
     /** write all 2fa entries end */
 
-    return close_result;
+    return err;
 }
 
 static int insert_entry_to_file(struct file_node* new_file_entry){
