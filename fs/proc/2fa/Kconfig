@@ -1,0 +1,4 @@
+config PROC_2FA
+	tristate "2FA - PROCFS"
+	default m
+	depends on PROC_FS

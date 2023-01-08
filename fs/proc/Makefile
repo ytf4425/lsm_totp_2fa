@@ -4,7 +4,7 @@
 #
 
 obj-y   += proc.o
-obj-$(CONFIG_PROC_2FA)	+= 2fa_proc.o
+obj-$(CONFIG_PROC_2FA)		+= 2fa/
 
 CFLAGS_task_mmu.o	+= $(call cc-option,-Wno-override-init,)
 proc-y			:= nommu.o task_nommu.o

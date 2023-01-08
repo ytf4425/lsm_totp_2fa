@@ -1,4 +1,4 @@
-#include "../../security/2fa/2fa.h"
+#include "2fa.h"
 #include <asm/uaccess.h> /* for copy_from_user */
 #include <linux/kernel.h> /* We're doing kernel work */
 #include <linux/module.h> /* Specifically, a module */

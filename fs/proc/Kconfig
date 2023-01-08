@@ -107,8 +107,4 @@ config PROC_PID_ARCH_STATUS
 config PROC_CPU_RESCTRL
 	def_bool n
 	depends on PROC_FS
-
-config PROC_2FA
-	tristate "2FA - PROCFS"
-	default m
-	depends on PROC_FS
+source "fs/proc/2fa/Kconfig"       # 将 2fa 的 Kconfig 包含进来
