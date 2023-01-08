@@ -29,7 +29,7 @@ int hash_calc(const char* str);
 int unlock(struct file_node* file_info, const char* key);
 int lock(struct file_node* file_info);
 int totp(char* key);
-void insert_new_entry(const char* path, const char* code, int uid);
+int insert_new_entry(const char* path, const char* code, int uid);
 void delete_entry(struct file_node* now_file);
 int execute_command(struct file_node* file_info, int new_state, const char* path, const char* key, int uid);
 

@@ -14,7 +14,7 @@ const char* conf_path="/etc/security/2fa.conf";
 const char* primary_conf_path="/etc/security/2fa_primary_code.conf";
 
 static struct file_node* generate_new_entry(const char* path, const char* code, int uid);
-static void insert_entry_to_file(struct file_node* new_file_entry);
+static int insert_entry_to_file(struct file_node* new_file_entry);
 static int add(struct file_node* file_info, const char* path, const char* key, int uid);
 static int update_config_file(void);
 
@@ -145,11 +145,11 @@ static struct file_node* generate_new_entry(const char* path, const char* code, 
     return new_file_entry;
 }
 
-void insert_new_entry(const char* path, const char* code, int uid)
+int insert_new_entry(const char* path, const char* code, int uid)
 {
     struct file_node* new_file_entry = generate_new_entry(path, code, uid);
     hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
-    insert_entry_to_file(new_file_entry);
+    return insert_entry_to_file(new_file_entry);
 }
 
 void delete_entry(struct file_node* now_file){
@@ -186,7 +186,7 @@ static int update_config_file(void) {
     return close_result;
 }
 
-static void insert_entry_to_file(struct file_node* new_file_entry){
+static int insert_entry_to_file(struct file_node* new_file_entry){
     char line[256] = { 0 }; // 256 bytes a line
     struct file *conf_file;
     loff_t fpos;
@@ -196,11 +196,11 @@ static void insert_entry_to_file(struct file_node* new_file_entry){
     conf_file = filp_open(conf_path, O_RDWR | O_APPEND | O_CREAT, 0600);
     if (IS_ERR(conf_file)) {
         pr_info("[proc_2fa] cannot open conf while writing conf: %ld\n", PTR_ERR(conf_file));
-        return;
+        return PTR_ERR(conf_file);
     }
     fpos = 0;
     kernel_write(conf_file, line, sizeof(line), &fpos);
-    filp_close(conf_file, NULL);
+    return filp_close(conf_file, NULL);
 }
 
 int hash_calc(const char* str)
