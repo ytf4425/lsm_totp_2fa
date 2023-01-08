@@ -3,6 +3,8 @@ import os
 
 
 def write_file(path, uid, command, code=None):
+    if os.path.isabs(path) == False:
+        path = os.path.abspath(path)
     with open('/proc/2fa/path', 'w') as f:
         f.write(path)
     if code is not None:
