@@ -16,6 +16,12 @@ static struct file_node* generate_new_entry(const char* path, const char* code, 
 static int insert_entry_to_file(struct file_node* new_file_entry);
 static int add(struct file_node* file_info, const char* path, const char* key, int uid);
 static int update_config_file(struct file* conf_file);
+static int hash_calc(const char* str);
+static int unlock(struct file_node* file_info, const char* key);
+static int lock(struct file_node* file_info);
+static int totp(char* key);
+static int insert_new_entry(const char* path, const char* code, int uid);
+static int delete_entry(struct file_node* now_file, const char* key);
 
 void init_hashtable(void)
 {
@@ -144,7 +150,7 @@ static struct file_node* generate_new_entry(const char* path, const char* code, 
     return new_file_entry;
 }
 
-int insert_new_entry(const char* path, const char* code, int uid)
+static int insert_new_entry(const char* path, const char* code, int uid)
 {
     int err;
     struct file_node* new_file_entry = generate_new_entry(path, code, uid);
@@ -153,7 +159,7 @@ int insert_new_entry(const char* path, const char* code, int uid)
     return err;
 }
 
-int delete_entry(struct file_node* now_file, const char* key)
+static int delete_entry(struct file_node* now_file, const char* key)
 {
     int err;
     struct file* conf_file;
@@ -225,7 +231,7 @@ static int insert_entry_to_file(struct file_node* new_file_entry){
     return filp_close(conf_file, NULL);
 }
 
-int hash_calc(const char* str)
+static int hash_calc(const char* str)
 {
     int i, ret;
     for (i = 0, ret = 0; str[i] != 0; i++) {
@@ -242,7 +248,7 @@ int hash_calc(const char* str)
 //     return base32_encode(str, 10);
 // }
 
-int totp(char* key)
+static int totp(char* key)
 {
     size_t len;
     size_t keylen;
@@ -262,14 +268,14 @@ int totp(char* key)
     return result;
 }
 
-int lock(struct file_node* file_info)
+static int lock(struct file_node* file_info)
 {
     file_info->state = LOCKED;
     printk(KERN_INFO "[proc_2fa]: %s locked.\n", file_info->path);
     return 0;
 }
 
-int unlock(struct file_node* file_info, const char* key)
+static int unlock(struct file_node* file_info, const char* key)
 {
     int key_in;
     char* key_true = (char*)vmalloc(sizeof(char) * 256);

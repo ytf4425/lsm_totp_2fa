@@ -25,12 +25,6 @@ void init_hashtable(void);
 void load_config(void);
 struct file_node* get_file_info(const char* path, int uid);
 int check_permission(char* path, int uid);
-int hash_calc(const char* str);
-int unlock(struct file_node* file_info, const char* key);
-int lock(struct file_node* file_info);
-int totp(char* key);
-int insert_new_entry(const char* path, const char* code, int uid);
-int delete_entry(struct file_node* now_file, const char* key);
 int execute_command(struct file_node* file_info, int new_state, const char* path, const char* key, int uid);
 
 // extern struct file *conf_file;
