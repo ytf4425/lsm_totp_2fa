@@ -154,10 +154,17 @@ int insert_new_entry(const char* path, const char* code, int uid)
     return err;
 }
 
-int delete_entry(struct file_node* now_file)
+int delete_entry(struct file_node* now_file, const char* key)
 {
     int err;
     struct file* conf_file;
+
+    // Unlock first. Deleting while locked is not allowed.
+    if (now_file->state != UNLOCKED) {
+        err = unlock(now_file, key);
+        if (err != 0)
+            return err;
+    }
 
     // test file permission
     conf_file = filp_open(conf_path, O_WRONLY | O_CREAT, 0600);
@@ -303,9 +310,7 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
         // vfree(new_code);
         return add(file_info, path, key, uid);
     case DELETE:
-        if (file_info->state != UNLOCKED)
-            return -EFAULT;
-        return delete_entry(file_info);
+        return delete_entry(file_info, key);
     default:
         printk(KERN_INFO "[proc_2fa]: /proc/2fa/state got unavaliable input.\n");
         return -EFAULT;
