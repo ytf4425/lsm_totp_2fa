@@ -153,12 +153,37 @@ void insert_new_entry(const char* path, const char* code, int uid)
 }
 
 void delete_entry(struct file_node* now_file){
-    // TODO: delete in file
-
     hash_del(&(now_file->node));
+    update_config_file();
+
     vfree(now_file->path);
     vfree(now_file->code);
     vfree(now_file);
+}
+
+static int update_config_file(void) {
+    struct file* conf_file;
+    int close_result;
+    loff_t fpos;
+    struct file_node* new_file_entry;
+    int bkt;
+
+    /** write all 2fa entries except primary code */
+    conf_file = filp_open(conf_path, O_WRONLY | O_CREAT, 0600);
+    if (IS_ERR(conf_file)) {
+        pr_info("[proc_2fa] init: cannot open conf: %ld.\n", PTR_ERR(conf_file));
+        return -PTR_ERR(conf_file);
+    }
+
+    fpos = 0;
+    hash_for_each(htable, bkt, new_file_entry, node)
+        insert_entry_to_file(new_file_entry);
+
+    close_result = filp_close(conf_file, NULL);
+    pr_info("[proc_2fa] update_config_file: conf_file closed: %d\n", close_result);
+    /** write all 2fa entries end */
+
+    return close_result;
 }
 
 static void insert_entry_to_file(struct file_node* new_file_entry){
