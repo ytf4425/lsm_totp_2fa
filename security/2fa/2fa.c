@@ -198,8 +198,13 @@ static int update_config_file(void) {
 
     fpos = 0;
     hash_for_each(htable, bkt, new_file_entry, node)
-        insert_entry_to_file(new_file_entry);
+    {
+        if ((strcmp(new_file_entry->path, conf_path) == 0 || strcmp(new_file_entry->path, primary_conf_path) == 0)
+            && (new_file_entry->uid == -1 || new_file_entry->uid == 0))
+            continue;
 
+        insert_entry_to_file(new_file_entry);
+    }
     close_result = filp_close(conf_file, NULL);
     pr_info("[proc_2fa] update_config_file: conf_file closed: %d\n", close_result);
     /** write all 2fa entries end */
