@@ -47,13 +47,20 @@ def delete(path, uid=str(os.geteuid()), code=None):
         print('delete failed: path is {}, uid is {}.'.format(path, uid))
 
 
-def new_2fa_code():
- pass
+def new_2fa_code(path,uid):
+    import base64
+    import random
+    import segno
+    new_code = str(base64.b32encode(random.randbytes(20)),'utf-8')
+    qr = "otpauth://totp/{label}?secret={secret}&issuer={issuer}".format(
+        label=path.replace('/', '#')+"#"+uid, secret=new_code, issuer="lsm_2fa")
+    segno.make(qr).terminal(border=1)
+    return new_code
 
 
 def add(path, uid=str(os.geteuid())):
     try:
-        write_file(path=path, code=new_2fa_code(), command="2", uid=uid)
+        write_file(path=path, code=new_2fa_code(path,uid), command="2", uid=uid)
     except:
         print('add failed: path is {}, uid is {}.'.format(path, uid))
 
