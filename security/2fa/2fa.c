@@ -1,14 +1,14 @@
 #include "2fa.h"
 #include <linux/string.h>
 
-struct hlist_head htable[16];
-EXPORT_SYMBOL(htable);
+struct hlist_head htable_2fa_entry[16];
+EXPORT_SYMBOL(htable_2fa_entry);
 
 int hash_calc(const char* str);
 
 void init_hashtable(void)
 {
-    hash_init(htable);
+    hash_init(htable_2fa_entry);
 }
 
 int hash_calc(const char* str)
@@ -26,7 +26,7 @@ int check_permission(char* path, int uid)
     struct file_node* file_entry;
     int state = UNLOCKED;
 
-    hash_for_each_possible(htable, file_entry, node, hash_value)
+    hash_for_each_possible(htable_2fa_entry, file_entry, node, hash_value)
     {
         if (file_entry->hash_value != hash_value)
             continue;

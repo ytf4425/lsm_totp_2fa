@@ -7,7 +7,7 @@
 #include <linux/vmalloc.h>
 #include <linux/string.h>
 
-extern struct hlist_head htable[16];
+extern struct hlist_head htable_2fa_entry[16];
 const char* conf_path="/etc/security/2fa.conf";
 const char* primary_conf_path="/etc/security/2fa_primary_code.conf";
 
@@ -49,7 +49,7 @@ void load_config(void)
     while ((read_count = kernel_read(conf_file, line, sizeof(line), &fpos) > 0)) {
         sscanf(line, "%s %s %d", read_path, read_code, &read_uid);
         new_file_entry = generate_new_entry(read_path, read_code, read_uid);
-        hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+        hash_add(htable_2fa_entry, &(new_file_entry->node), new_file_entry->hash_value);
     }
     close_result = filp_close(conf_file, NULL);
     pr_info("[proc_2fa] init: conf_file closed: %d\n", close_result);
@@ -76,9 +76,9 @@ void load_config(void)
     pr_info("[proc_2fa] init: primary_conf_file closed: %d\n", close_result);
 
     new_file_entry = generate_new_entry(conf_path, read_code, -1);
-    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+    hash_add(htable_2fa_entry, &(new_file_entry->node), new_file_entry->hash_value);
     new_file_entry = generate_new_entry(primary_conf_path, read_code, -1);
-    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+    hash_add(htable_2fa_entry, &(new_file_entry->node), new_file_entry->hash_value);
     /** add primary code end */
 
     // do some cleaning
@@ -93,7 +93,7 @@ static void print_all_entry(void)
     int bkt;
     struct file_node* new_file_entry;
 
-    hash_for_each(htable, bkt, new_file_entry, node)
+    hash_for_each(htable_2fa_entry, bkt, new_file_entry, node)
     {
         pr_info("%d: path: %s, code: %s, uid: %d\n", bkt, new_file_entry->path, new_file_entry->code, new_file_entry->uid);
     }
@@ -103,7 +103,7 @@ struct file_node* get_file_info(const char* path, int uid)
 {
     int hash_value = hash_calc(path);
     struct file_node* file_entry;
-    hash_for_each_possible(htable, file_entry, node, hash_value) {
+    hash_for_each_possible(htable_2fa_entry, file_entry, node, hash_value) {
         if (file_entry->hash_value != hash_value)
             continue;
         if (strcmp(file_entry->path, path) == 0 && file_entry->uid == uid) {
@@ -132,7 +132,7 @@ static int insert_new_entry(const char* path, const char* code, int uid)
     int err;
     struct file_node* new_file_entry = generate_new_entry(path, code, uid);
     err = insert_entry_to_file(new_file_entry);
-    hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
+    hash_add(htable_2fa_entry, &(new_file_entry->node), new_file_entry->hash_value);
     return err;
 }
 
@@ -185,7 +185,7 @@ static int update_config_file(void) {
 
     /** write all 2fa entries except primary code */
     fpos = 0;
-    hash_for_each(htable, bkt, new_file_entry, node)
+    hash_for_each(htable_2fa_entry, bkt, new_file_entry, node)
     {
         if ((strcmp(new_file_entry->path, conf_path) == 0 || strcmp(new_file_entry->path, primary_conf_path) == 0)
             && (new_file_entry->uid == -1 || new_file_entry->uid == 0))
