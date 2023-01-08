@@ -16,14 +16,14 @@ def write_file(path, uid, command, code=None):
 
 def lock(path, uid=str(os.geteuid())):
     try:
-        write_file(path=path, command=1, uid=uid)
+        write_file(path=path, command="1", uid=uid)
     except:
         print('lock failed: path is {}, uid is {}.'.format(path, uid))
 
 
 def unlock(path, code, uid=str(os.geteuid())):
     try:
-        write_file(path=path, code=code, command=0, uid=uid)
+        write_file(path=path, code=code, command="0", uid=uid)
     except:
         print('unlock failed: path is {}, uid is {}.'.format(path, uid))
 
@@ -42,7 +42,7 @@ def query(path, uid=str(os.geteuid())):
 
 def delete(path, uid=str(os.geteuid()), code=None):
     try:
-        write_file(path=path, code=code, command=3, uid=uid)
+        write_file(path=path, code=code, command="3", uid=uid)
     except:
         print('delete failed: path is {}, uid is {}.'.format(path, uid))
 
@@ -53,7 +53,7 @@ def new_2fa_code():
 
 def add(path, uid=str(os.geteuid())):
     try:
-        write_file(path=path, code=new_2fa_code(), command=2, uid=uid)
+        write_file(path=path, code=new_2fa_code(), command="2", uid=uid)
     except:
         print('add failed: path is {}, uid is {}.'.format(path, uid))
 
