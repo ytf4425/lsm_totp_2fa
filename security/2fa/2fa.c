@@ -147,18 +147,32 @@ static struct file_node* generate_new_entry(const char* path, const char* code, 
 
 int insert_new_entry(const char* path, const char* code, int uid)
 {
+    int err;
     struct file_node* new_file_entry = generate_new_entry(path, code, uid);
+    err = insert_entry_to_file(new_file_entry);
     hash_add(htable, &(new_file_entry->node), new_file_entry->hash_value);
-    return insert_entry_to_file(new_file_entry);
+    return err;
 }
 
-void delete_entry(struct file_node* now_file){
+int delete_entry(struct file_node* now_file)
+{
+    int err;
+    struct file* conf_file;
+
+    // test file permission
+    conf_file = filp_open(conf_path, O_WRONLY | O_CREAT, 0600);
+    if (IS_ERR(conf_file)) {
+        pr_info("[proc_2fa] init: cannot open conf: %ld.\n", PTR_ERR(conf_file));
+        return -PTR_ERR(conf_file);
+    }
+
     hash_del(&(now_file->node));
-    update_config_file();
+    err = update_config_file();
 
     vfree(now_file->path);
     vfree(now_file->code);
     vfree(now_file);
+    return err;
 }
 
 static int update_config_file(void) {
@@ -273,8 +287,7 @@ static int add(struct file_node* file_info, const char* path, const char* key, i
         return -EFAULT;
     }
 
-    insert_new_entry(path, key, uid);
-    return 0;
+    return insert_new_entry(path, key, uid);
 }
 
 int execute_command(struct file_node* file_info, int new_state, const char* path, const char* key, int uid)
@@ -294,8 +307,7 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
             return -EFAULT;
         if (file_info->state != UNLOCKED)
             return -EFAULT;
-        delete_entry(file_info);
-        return 0;
+        return delete_entry(file_info);
     default:
         printk(KERN_INFO "[proc_2fa]: /proc/2fa/state got unavaliable input.\n");
         return -EFAULT;
