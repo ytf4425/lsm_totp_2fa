@@ -15,6 +15,8 @@ const char* primary_conf_path="/etc/security/2fa_primary_code.conf";
 
 static struct file_node* generate_new_entry(const char* path, const char* code, int uid);
 static void insert_entry_to_file(struct file_node* new_file_entry);
+static int add(struct file_node* file_info, const char* path, const char* key, int uid);
+static int update_config_file(void);
 
 void init_hashtable(void)
 {
@@ -239,6 +241,17 @@ int unlock(struct file_node* file_info, const char* key)
     }
 }
 
+static int add(struct file_node* file_info, const char* path, const char* key, int uid)
+{
+    if (file_info != NULL) {
+        pr_info("[proc_2fa]: 2fa entry has already existed: path: %s, uid: %d.\n", path, uid);
+        return -EFAULT;
+    }
+
+    insert_new_entry(path, key, uid);
+    return 0;
+}
+
 int execute_command(struct file_node* file_info, int new_state, const char* path, const char* key, int uid)
 {
     switch (new_state) {
@@ -248,9 +261,8 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
         return unlock(file_info, key);
     case ADD:
         // char* new_code = get_new_2fa_code();
-        insert_new_entry(path, key, uid);
         // vfree(new_code);
-        return 0;
+        return add(file_info, path, key, uid);
     case DELETE:
         file_info = get_file_info(path, uid);
         if (file_info == NULL)
