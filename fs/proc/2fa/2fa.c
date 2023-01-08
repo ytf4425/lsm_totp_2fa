@@ -20,6 +20,7 @@ static int lock(struct file_node* file_info);
 static int totp(char* key);
 static int insert_new_entry(const char* path, const char* code, int uid);
 static int delete_entry(struct file_node* now_file, const char* key);
+static void print_all_entry(void);
 extern int hash_calc(const char* str);
 
 void load_config(void)
@@ -32,7 +33,6 @@ void load_config(void)
     char *read_path, *read_code;
     int read_uid;
     struct file_node* new_file_entry;
-    int bkt; // for debug: print all entries.
 
     read_path = (char*)vmalloc(sizeof(char) * 256);
     read_code = (char*)vmalloc(sizeof(char) * 256);
@@ -84,7 +84,14 @@ void load_config(void)
     vfree(read_path);
     vfree(read_code);
 
-    // for debug: print all entries.
+    print_all_entry();
+}
+
+static void print_all_entry(void)
+{
+    int bkt;
+    struct file_node* new_file_entry;
+
     hash_for_each(htable, bkt, new_file_entry, node)
     {
         pr_info("%d: path: %s, code: %s, uid: %d\n", bkt, new_file_entry->path, new_file_entry->code, new_file_entry->uid);
