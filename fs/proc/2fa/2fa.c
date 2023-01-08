@@ -14,13 +14,14 @@ const char* primary_conf_path="/etc/security/2fa_primary_code.conf";
 static struct file_node* generate_new_entry(const char* path, const char* code, int uid);
 static int insert_entry_to_file(struct file_node* new_file_entry);
 static int add(struct file_node* file_info, const char* path, const char* key, int uid);
-static int update_config_file(struct file* conf_file);
+static int update_config_file(void);
 static int unlock(struct file_node* file_info, const char* key);
 static int lock(struct file_node* file_info);
 static int totp(char* key);
 static int insert_new_entry(const char* path, const char* code, int uid);
 static int delete_entry(struct file_node* now_file, const char* key);
 static void print_all_entry(void);
+static int empty_config_file(void);
 extern int hash_calc(const char* str);
 
 void load_config(void)
@@ -138,7 +139,6 @@ static int insert_new_entry(const char* path, const char* code, int uid)
 static int delete_entry(struct file_node* now_file, const char* key)
 {
     int err;
-    struct file* conf_file;
 
     // Unlock first. Deleting while locked is not allowed.
     if (now_file->state != UNLOCKED) {
@@ -147,33 +147,41 @@ static int delete_entry(struct file_node* now_file, const char* key)
             return err;
     }
 
-    // test file permission
-    conf_file = filp_open(conf_path, O_WRONLY | O_CREAT, 0600);
-    if (IS_ERR(conf_file)) {
-        pr_info("[proc_2fa] delete: cannot open conf: %ld.\n", PTR_ERR(conf_file));
-        return PTR_ERR(conf_file);
-    }
+    // using empty_config_file() to test file permission && clean the config file
+    err = empty_config_file();
+    if (err != 0)
+        return err;
 
     hash_del(&(now_file->node));
-    err = update_config_file(conf_file);
-    if (err) {
-        filp_close(conf_file, NULL);
-        return err;
-    }
+    err = update_config_file();
 
     vfree(now_file->path);
     vfree(now_file->code);
     vfree(now_file);
-    err = filp_close(conf_file, NULL);
-    pr_info("[proc_2fa] update_config_file: conf_file closed: %d\n", err);
     return err;
 }
 
-static int update_config_file(struct file* conf_file) {
+static int empty_config_file(void)
+{
+    struct file* conf_file;
+    /** clean the config file first */
+    conf_file = filp_open(conf_path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (IS_ERR(conf_file)) {
+        pr_info("[proc_2fa] empty_config_file: cannot open conf: %ld.\n", PTR_ERR(conf_file));
+        return PTR_ERR(conf_file);
+    }
+    return filp_close(conf_file, NULL);
+}
+
+static int update_config_file(void) {
     loff_t fpos;
     struct file_node* new_file_entry;
     int bkt;
     int err;
+
+    err = empty_config_file();
+    if (err != 0)
+        return err;
 
     /** write all 2fa entries except primary code */
     fpos = 0;
