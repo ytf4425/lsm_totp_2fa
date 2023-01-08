@@ -302,9 +302,6 @@ int execute_command(struct file_node* file_info, int new_state, const char* path
         // vfree(new_code);
         return add(file_info, path, key, uid);
     case DELETE:
-        file_info = get_file_info(path, uid);
-        if (file_info == NULL)
-            return -EFAULT;
         if (file_info->state != UNLOCKED)
             return -EFAULT;
         return delete_entry(file_info);
