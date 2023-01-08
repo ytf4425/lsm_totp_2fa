@@ -49,11 +49,11 @@ def delete(path, uid=str(os.geteuid()), code=None):
         print('delete failed: path is {}, uid is {}.'.format(path, uid))
 
 
-def new_2fa_code(path,uid):
+def new_2fa_code(path, uid):
     import base64
     import random
     import segno
-    new_code = str(base64.b32encode(random.randbytes(20)),'utf-8')
+    new_code = str(base64.b32encode(random.randbytes(20)), 'utf-8')
     qr = "otpauth://totp/{label}?secret={secret}&issuer={issuer}".format(
         label=path.replace('/', '#')+"#"+uid, secret=new_code, issuer="lsm_2fa")
     segno.make(qr).terminal(border=1)
@@ -62,16 +62,20 @@ def new_2fa_code(path,uid):
 
 def add(path, uid=str(os.geteuid())):
     try:
-        write_file(path=path, code=new_2fa_code(path,uid), command="2", uid=uid)
+        write_file(path=path, code=new_2fa_code(
+            path, uid), command="2", uid=uid)
     except:
         print('add failed: path is {}, uid is {}.'.format(path, uid))
 
 
 def print_err():
     print("error: wrong args number.")
-    print("usage: python " + sys.argv[0] + " { lock | query | add } path [uid]")
+    print("usage: python " + sys.argv[0] +
+          " { lock | query | add } path [uid]")
     print("       python " + sys.argv[0] + " unlock path 2fa_code [uid]")
-    print("       python " + sys.argv[0] + " delete path [-c 2fa_code] [-u uid]")
+    print("       python " + sys.argv[0] +
+          " delete path [-c 2fa_code] [-u uid]")
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
@@ -101,9 +105,9 @@ if __name__ == "__main__":
             unlock(sys.argv[2], sys.argv[3], sys.argv[4])
         elif sys.argv[1] == 'delete':
             if sys.argv[3] == '-c':
-                delete(sys.argv[2], code = sys.argv[4])
+                delete(sys.argv[2], code=sys.argv[4])
             elif sys.argv[3] == '-u':
-                delete(sys.argv[2], uid = sys.argv[4])
+                delete(sys.argv[2], uid=sys.argv[4])
             else:
                 print_err()
         else:
@@ -111,9 +115,9 @@ if __name__ == "__main__":
     elif len(sys.argv) == 7:
         if sys.argv[1] == 'delete':
             if sys.argv[3] == '-c' and sys.argv[5] == '-u':
-                delete(sys.argv[2], code = sys.argv[4],uid = sys.argv[6])
+                delete(sys.argv[2], code=sys.argv[4], uid=sys.argv[6])
             elif sys.argv[5] == '-c' and sys.argv[3] == '-u':
-                delete(sys.argv[2], code = sys.argv[6],uid = sys.argv[4])
+                delete(sys.argv[2], code=sys.argv[6], uid=sys.argv[4])
             else:
                 print_err()
         else:
