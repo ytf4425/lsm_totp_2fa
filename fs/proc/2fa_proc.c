@@ -186,13 +186,14 @@ static ssize_t proc_write_state(struct file* file, const char __user* buffer, si
         return -EFAULT;
     }
 
+    sscanf(sbuff, "%d", &new_state);
     now_file = get_file_info(path, uid);
+
     if (now_file == NULL && new_state != ADD){
-        printk(KERN_INFO "[proc_2fa]: can not find 2fa entry: path: %s, uid: %d.\n", path, uid);
+        printk(KERN_INFO "[proc_2fa]: can not find 2fa entry: path: %s, uid: %d, action: %d.\n", path, uid, new_state);
         return -EFAULT;
     }
     
-    sscanf(sbuff, "%d", &new_state);
     err = execute_command(now_file, new_state, path, key, uid);
     if (err)
         return err;
