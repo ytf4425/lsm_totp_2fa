@@ -47,6 +47,8 @@ def delete(path, uid=str(os.geteuid()), code=None):
         write_file(path=path, code=code, command="3", uid=uid)
     except:
         print('delete failed: path is {}, uid is {}.'.format(path, uid))
+        print("If you have not unlocked the configuration file, please unlock /etc/security/2fa.conf first.")
+        print("If you do not have the access to config file after unlocking it, please switch to root user.")
 
 
 def new_2fa_code(path, uid):
@@ -56,7 +58,11 @@ def new_2fa_code(path, uid):
     new_code = str(base64.b32encode(random.randbytes(20)), 'utf-8')
     qr = "otpauth://totp/{label}?secret={secret}&issuer={issuer}".format(
         label=path.replace('/', '#')+"#"+uid, secret=new_code, issuer="lsm_2fa")
+
+    print("Scan the QR Code with your 2fa authenticator.")
     segno.make(qr).terminal(border=1)
+    print("\nYou can also manully add to 2fa authenticator with code:\n{code}".format(
+        code=new_code))
     return new_code
 
 
@@ -66,6 +72,8 @@ def add(path, uid=str(os.geteuid())):
             path, uid), command="2", uid=uid)
     except:
         print('add failed: path is {}, uid is {}.'.format(path, uid))
+        print("If you have not unlocked the configuration file, please unlock /etc/security/2fa.conf first.")
+        print("If you do not have the access to config file after unlocking it, please switch to root user.")
 
 
 def print_err():
