@@ -1,7 +1,6 @@
 #include "2fa.h"
 #include "otp/base32.h"
 #include "otp/rfc6238.h"
-#include "utils.h"
 #include <linux/ktime.h>
 #include <linux/time64.h>
 #include <linux/timekeeping.h>
