@@ -132,6 +132,9 @@ static int insert_new_entry(const char* path, const char* code, int uid)
     int err;
     struct file_node* new_file_entry = generate_new_entry(path, code, uid);
     err = insert_entry_to_file(new_file_entry);
+    if (err)
+        return err;
+
     hash_add(htable_2fa_entry, &(new_file_entry->node), new_file_entry->hash_value);
     return err;
 }
