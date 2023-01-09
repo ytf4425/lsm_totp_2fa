@@ -59,7 +59,7 @@ def new_2fa_code(path, uid):
     import segno
     new_code = str(base64.b32encode(random.randbytes(20)), 'utf-8')
     qr = "otpauth://totp/{label}?secret={secret}&issuer={issuer}".format(
-        label=path.replace('/', '#')+"#"+uid, secret=new_code, issuer="lsm_2fa")
+        label=path.replace('/', '_')+"_"+uid, secret=new_code, issuer="lsm_2fa")
 
     print("Scan the QR Code with your 2fa authenticator.")
     segno.make(qr).terminal(border=1)
