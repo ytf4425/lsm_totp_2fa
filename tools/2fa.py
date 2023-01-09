@@ -31,6 +31,8 @@ def unlock(path, code, uid=str(os.geteuid())):
 
 
 def query(path, uid=str(os.geteuid())):
+    if os.path.isabs(path) == False:
+        path = os.path.abspath(path)
     with open('/proc/2fa/path', 'w') as f:
         f.write(path)
     with open('/proc/2fa/uid', 'w') as f:
